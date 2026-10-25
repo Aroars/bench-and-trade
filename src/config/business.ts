@@ -80,9 +80,9 @@ export const business = {
   photos: {
     mode: "stock" as "stock" | "owned",
     hero: {
-      src: "/photos/stock/boy-goggles-soldering.jpg",
-      alt: "A boy in safety goggles using a soldering iron at a bench.",
-      focalPoint: "center 20%",
+      src: "/photos/owned/hero-kids-robot-arena.jpg",
+      alt: "Kids gathered around a robot arena table, driving small robots with controllers.",
+      focalPoint: "center",
     },
   },
 } as const;
