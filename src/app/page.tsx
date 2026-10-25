@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { business, formatDollars } from "@/config/business";
+import { HeroPhoto } from "@/components/hero-photo";
 import { PhotoWell } from "@/components/photo-well";
 import { ShopPhoto } from "@/components/shop-photo";
 
@@ -10,7 +11,7 @@ export default function HomePage() {
   return (
     <>
       <section className="hero">
-        <ShopPhoto slot="woodshop" />
+        <HeroPhoto />
         <div className="hero-sign">
           <p className="sticker">
             Ages {business.ages.min} to {business.ages.max}
@@ -55,7 +56,7 @@ export default function HomePage() {
           <h2>Where do you want to start?</h2>
           <ul className="paths">
             <li className="path-with-photo">
-              <ShopPhoto slot="bench" />
+              <ShopPhoto slot="woodshop" />
               <Link href={`/events/${pilot.slug}`}>
                 <span className="meta">Saturday shop class</span>
                 <span className="path-title">{pilot.name}</span>

@@ -74,9 +74,16 @@ export const business = {
   /**
    * "stock" uses the Pexels files listed in src/config/photos.ts.
    * Set this to "owned" when real class photos are ready, then fill ownedPhotos.
+   * hero.src, hero.alt, and hero.focalPoint are the home hero. Swap those three
+   * when a real class photo is ready. focalPoint is a CSS object-position value.
    */
   photos: {
     mode: "stock" as "stock" | "owned",
+    hero: {
+      src: "/photos/stock/boy-goggles-soldering.jpg",
+      alt: "A boy in safety goggles using a soldering iron at a bench.",
+      focalPoint: "center 20%",
+    },
   },
 } as const;
 

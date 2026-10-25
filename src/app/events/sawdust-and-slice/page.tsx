@@ -21,7 +21,7 @@ export default function EventPage() {
     <article>
       <section className="section band-dark">
         <div className="wrap split event-top">
-          <ShopPhoto slot="woodshop" />
+          <ShopPhoto slot="bench" />
           <div className="stack">
             <p className="meta">A {business.name} shop class</p>
             <h1>{pilot.name}</h1>

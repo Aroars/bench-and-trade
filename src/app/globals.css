@@ -46,6 +46,7 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+  filter: none;
 }
 
 a {
@@ -558,11 +559,14 @@ p {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   object-position: center 15%;
+  filter: none;
 }
 
-.hero .shop-photo img {
+.hero .shop-photo img,
+.hero-photo img {
   aspect-ratio: 4 / 5;
   max-height: 82vh;
+  filter: none;
 }
 
 .shop-photo figcaption {

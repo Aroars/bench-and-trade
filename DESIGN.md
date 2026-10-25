@@ -81,6 +81,6 @@ Spacing uses the same idea as their page padding: `4vw` inside a 1400px wrap, `6
 
 ## Images
 
-`business.photos.mode` is `stock` or `owned`. Stock files live in `public/photos/stock/` and are listed in `PHOTO_CREDITS.md` and `src/config/photos.ts`. They are not captioned as Bench & Trade students. The instructor block stays a labeled well. Open Graph images are generated posters (charcoal on the home page, paper with a yellow bar on the class page), not photographs.
+`business.photos.mode` is `stock` or `owned`. Stock files live in `public/photos/stock/` and are listed in `PHOTO_CREDITS.md` and `src/config/photos.ts`. They are not captioned as Bench & Trade students. Photos are shown in their own color. No grayscale or desaturate filter is applied. The home hero reads `business.photos.hero` (`src`, `alt`, `focalPoint`) so a new photo is a config change. The instructor block stays a labeled well. Open Graph images are generated posters (charcoal on the home page, paper with a yellow bar on the class page), not photographs.
 
 The sponsor image is the horizontal "casanova PIZZERIA" wordmark from https://www.casanovapizzeria.com/ (`2a5563_2caf245ed9714688bf8d508ee75759ea~mv2.png`), resized and saved at `public/sponsors/casanova-pizzeria.jpg`. The header of that site is text plus social icons, not this file. The file is a logo image on the site, so the sponsor block uses it. Alt text is "Casanova Pizzeria".
