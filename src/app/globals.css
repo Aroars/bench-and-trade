@@ -473,7 +473,19 @@ p {
 }
 
 .path-card:has(.countdown-badge) {
-  padding-right: 6.6rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+  align-items: start;
+}
+
+.path-card:has(.countdown-badge) > .meta {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+
+.path-card:has(.countdown-badge) > :not(.countdown-badge):not(.meta) {
+  grid-column: 1 / -1;
 }
 
 .countdown-badge,
@@ -490,9 +502,10 @@ p {
 }
 
 .countdown-badge {
-  position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
   z-index: 1;
   padding: 0.35rem 0.45rem 0.4rem;
   transform: rotate(2.5deg);
