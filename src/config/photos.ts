@@ -9,16 +9,16 @@ export type ShopPhoto = {
 };
 
 /**
- * Stand-in photos. Each one is a child doing shop or bench work with protection
- * the publisher describes (an apron or safety goggles). They are not Bench & Trade students.
+ * Stand-in photos. They are not Bench & Trade students.
+ * sanding: hands on a wood block. bench: a boy in safety goggles at a soldering bench.
  */
 export const stockPhotos = {
-  woodshop: {
-    src: "/photos/stock/boy-apron-tools.jpg",
-    alt: "A boy in a workshop apron holding hand tools.",
-    photographer: "Safari Consoler",
+  sanding: {
+    src: "/photos/stock/hands-sanding-wood.jpg",
+    alt: "Hands sanding a small block of wood.",
+    photographer: "cottonbro studio",
     sourceName: "Pexels",
-    sourceUrl: "https://www.pexels.com/photo/portrait-of-a-boy-wearing-an-apron-16850249/",
+    sourceUrl: "https://www.pexels.com/photo/a-person-using-a-sandpaper-on-a-piece-of-wood-7482645/",
   },
   bench: {
     src: "/photos/stock/boy-goggles-soldering.jpg",

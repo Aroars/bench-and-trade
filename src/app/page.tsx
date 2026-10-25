@@ -56,7 +56,7 @@ export default function HomePage() {
           <h2>Where do you want to start?</h2>
           <ul className="paths">
             <li className="path-with-photo">
-              <ShopPhoto slot="woodshop" />
+              <ShopPhoto slot="sanding" />
               <Link href={`/events/${pilot.slug}`}>
                 <span className="meta">Saturday shop class</span>
                 <span className="path-title">{pilot.name}</span>
