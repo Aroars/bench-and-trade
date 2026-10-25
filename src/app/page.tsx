@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { business, formatDollars } from "@/config/business";
+import { ClassCountdown } from "@/components/class-countdown";
 import { HeroPhoto } from "@/components/hero-photo";
 import { PhotoWell } from "@/components/photo-well";
 import { ShopPhoto } from "@/components/shop-photo";
@@ -57,7 +59,10 @@ export default function HomePage() {
           <ul className="paths">
             <li className="path-with-photo">
               <ShopPhoto slot="sanding" />
-              <Link href={`/events/${pilot.slug}`}>
+              <Link className="path-card" href={`/events/${pilot.slug}`}>
+                <Suspense fallback={null}>
+                  <ClassCountdown variant="badge" />
+                </Suspense>
                 <span className="meta">Saturday shop class</span>
                 <span className="path-title">{pilot.name}</span>
                 <span>

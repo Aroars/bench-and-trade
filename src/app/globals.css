@@ -468,6 +468,87 @@ p {
   color: var(--charcoal);
 }
 
+.path-card {
+  position: relative;
+}
+
+.path-card:has(.countdown-badge) {
+  padding-right: 6.6rem;
+}
+
+.countdown-badge,
+.countdown-banner {
+  display: grid;
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  background: var(--yellow);
+  color: var(--charcoal);
+  border: 3px solid var(--charcoal);
+  box-shadow: 3px 3px 0 var(--charcoal);
+  line-height: 1;
+}
+
+.countdown-badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 1;
+  padding: 0.35rem 0.45rem 0.4rem;
+  transform: rotate(2.5deg);
+}
+
+.countdown-banner {
+  justify-self: start;
+  padding: 0.55rem 0.85rem 0.65rem;
+  transform: rotate(-2deg);
+}
+
+.countdown-big {
+  font-family: "Rowdies", "Arial Black", Impact, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--charcoal);
+}
+
+.countdown-badge .countdown-big {
+  font-size: 1.15rem;
+}
+
+.countdown-banner .countdown-big {
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  line-height: 0.95;
+}
+
+.countdown-small {
+  margin-top: 0.15rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--charcoal);
+}
+
+.countdown-banner .countdown-small {
+  font-size: 0.8rem;
+}
+
+.band-dark .countdown-banner,
+.band-dark .countdown-banner .countdown-big,
+.band-dark .countdown-banner .countdown-small {
+  color: var(--charcoal);
+}
+
+.paths a:hover .countdown-badge {
+  background: var(--charcoal);
+  border-color: var(--charcoal);
+}
+
+.paths a:hover .countdown-badge .countdown-big,
+.paths a:hover .countdown-badge .countdown-small {
+  color: var(--yellow);
+}
+
 .path-with-photo {
   display: grid;
   gap: 1rem;
@@ -873,7 +954,9 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sticker {
+  .sticker,
+  .countdown-badge,
+  .countdown-banner {
     transform: none;
   }
 }

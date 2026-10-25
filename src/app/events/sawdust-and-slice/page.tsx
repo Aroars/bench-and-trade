@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { business, formatDollars } from "@/config/business";
+import { ClassCountdown } from "@/components/class-countdown";
 import { ShopPhoto } from "@/components/shop-photo";
 import { SpotsCount } from "@/components/spots-count";
 import { SponsorBlock } from "@/components/sponsor-block";
@@ -26,6 +28,9 @@ export default function EventPage() {
             <p className="meta">A {business.name} shop class</p>
             <h1>{pilot.name}</h1>
             <p className="deck">{pilot.subtitle}</p>
+            <Suspense fallback={null}>
+              <ClassCountdown variant="banner" />
+            </Suspense>
             <div className="price-block">
               <p className="price">{formatDollars(pilot.priceCents)} per kid</p>
               <SpotsCount />
