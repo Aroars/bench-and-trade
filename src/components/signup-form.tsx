@@ -219,8 +219,10 @@ export function SignupForm({
       <p>{spotNote}</p>
       <p className="gap-top">
         {kids.length} {kids.length === 1 ? "child" : "children"} at{" "}
-        {formatDollars(business.pilot.priceCents)} is {formatDollars(total)}. The card
-        receipt lists each child&apos;s name.
+        {formatDollars(business.pilot.priceCents)} is {formatDollars(total)}.{" "}
+        {paymentMode === "hold"
+          ? "Nothing is charged today. The payment link will list each child's name."
+          : "The card receipt lists each child's name."}
       </p>
 
       <div className="field gap-top">
