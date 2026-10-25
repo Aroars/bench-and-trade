@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { business, formatDollars } from "@/config/business";
 
 type Kid = {
@@ -23,6 +23,7 @@ function emptyKid(key: string): Kid {
 
 export function SignupForm() {
   const search = useSearchParams();
+  const router = useRouter();
   const canceled = search.get("canceled") === "1";
   const idempotencyKey = useRef<string | null>(null);
   const keyCount = useRef(2);
@@ -162,11 +163,11 @@ export function SignupForm() {
         return;
       }
       if (body.status === "waitlist") {
-        window.location.assign("/thank-you?status=waitlist");
+        router.push("/thank-you?status=waitlist");
         return;
       }
       if (body.status === "paid") {
-        window.location.assign("/thank-you?status=paid");
+        router.push("/thank-you?status=paid");
         return;
       }
       if (body.checkoutUrl) {

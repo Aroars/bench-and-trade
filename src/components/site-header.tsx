@@ -16,10 +16,11 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!open) {
@@ -55,7 +56,9 @@ export function SiteHeader() {
           <ul>
             {links.map((link) => (
               <li key={link.href}>
-                <Link href={link.href}>{link.label}</Link>
+                <Link href={link.href} onClick={() => setOpen(false)}>
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>
