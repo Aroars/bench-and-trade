@@ -1,11 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
-const migrationPath = new URL(
-  "../supabase/migrations/20261025173814_init_signups.sql",
-  import.meta.url,
-);
+const migrationDir = new URL("../supabase/migrations/", import.meta.url);
 
 function family(kids, overrides = {}) {
   return {
@@ -70,8 +67,12 @@ async function expectError(fn, snippet) {
 }
 
 const db = new PGlite();
-const sql = readFileSync(migrationPath, "utf8");
-await db.exec(sql);
+const migrationFiles = readdirSync(migrationDir)
+  .filter((name) => name.endsWith(".sql"))
+  .sort();
+for (const name of migrationFiles) {
+  await db.exec(readFileSync(new URL(name, migrationDir), "utf8"));
+}
 
 const seeded = await db.query(
   "select slug, price_cents, capacity, location_address from public.events",
@@ -181,6 +182,22 @@ await expectError(
     ),
   "row-level security",
 );
+await expectError(
+  () =>
+    db.query(
+      `insert into public.registrations (
+        event_id, idempotency_key, parent_name, parent_email, parent_phone,
+        emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
+        heard_about, photo_release, waiver_accepted, allergen_ack, status
+      ) values ($1, $2, 'Pat', 'pat@example.com', '2085550100', 'Sam', '2085550101', 'Parent', 'Other', false, true, true, 'pending_payment')`,
+      [eventId, randomUUID()],
+    ),
+  "row-level security",
+);
+await expectError(
+  () => db.query("select public.hold_registration_for_payment($1::uuid)", [randomUUID()]),
+  "permission denied",
+);
 await db.query(
   `insert into public.registrations (
     event_id, idempotency_key, parent_name, parent_email, parent_phone,
@@ -195,6 +212,52 @@ const visible = await db.query(
   "select count(*)::int as count from public.registrations where parent_email = 'pat@example.com'",
 );
 assert(visible.rows[0].count === 1, "anon insert did not land");
+
+const beta = await signup(db, family(2));
+assert(beta.status === "pending", "beta signup starts pending");
+const held = await call(
+  db,
+  "select public.hold_registration_for_payment($1::uuid) as result",
+  [beta.id],
+);
+assert(
+  held.ok === true && held.status === "pending_payment" && held.already === false,
+  "hold for payment",
+);
+const heldAgain = await call(
+  db,
+  "select public.hold_registration_for_payment($1::uuid) as result",
+  [beta.id],
+);
+assert(heldAgain.already === true, "hold is idempotent");
+
+await db.query(
+  "update public.registrations set created_at = now() - interval '2 days' where id = $1",
+  [beta.id],
+);
+open = await spots(db);
+assert(open.taken === 9, `pending_payment should keep seats, taken ${open.taken}`);
+
+const overflow = await signup(db, family(4));
+assert(overflow.status === "waitlist", "held spots count toward capacity");
+
+await db.query("select public.release_registration($1::uuid)", [beta.id]);
+const betaRow = await db.query("select status from public.registrations where id = $1", [beta.id]);
+assert(betaRow.rows[0].status === "pending_payment", "release must not drop a held spot");
+
+const paidBeta = await call(
+  db,
+  "select public.mark_registration_paid($1::uuid, $2, $3, $4) as result",
+  [beta.id, "pi_beta", 8000, "cs_beta"],
+);
+assert(paidBeta.ok === true && paidBeta.status === "paid", "a held spot can be marked paid");
+
+const badHold = await call(
+  db,
+  "select public.hold_registration_for_payment($1::uuid) as result",
+  [waiting.id],
+);
+assert(badHold.ok === false && badHold.reason === "bad_status", "waitlist cannot be held");
 
 console.log("verify-db: seat holds, payments, and RLS checks passed");
 await db.close();

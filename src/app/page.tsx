@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { business, formatDollars } from "@/config/business";
 import { PhotoWell } from "@/components/photo-well";
-import { ShopMark } from "@/components/shop-mark";
+import { ShopPhoto } from "@/components/shop-photo";
 
 export default function HomePage() {
   const { pilot, contact } = business;
@@ -10,20 +10,25 @@ export default function HomePage() {
   return (
     <>
       <section className="hero">
-        <ShopMark className="hero-mark" />
-        <div className="hero-copy">
+        <ShopPhoto slot="woodshop" />
+        <div className="hero-sign">
+          <p className="sticker">
+            Ages {business.ages.min} to {business.ages.max}
+          </p>
           <p className="kicker">{business.name}</p>
           <h1>{business.tagline}</h1>
           <p className="deck">
-            A shop class for kids in the {business.region}. Ages {business.ages.min} to{" "}
-            {business.ages.max}. Hand tools, a project they take home, and a teacher who
-            builds for a living.
+            A shop class for kids in the {business.region}. Hand tools, a project they take
+            home, and a teacher who builds for a living.
+          </p>
+          <p>
+            <Link className="button" href={`/events/${pilot.slug}`}>
+              Saturday class
+            </Link>
           </p>
         </div>
       </section>
-      <p className="wrap meta photo-caption">
-        Photo needed: the bench at the start of class, safety glasses on, tools laid out.
-      </p>
+      <div className="hazard" aria-hidden="true" />
 
       <section className="section">
         <div className="wrap measure stack">
@@ -43,12 +48,14 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+      <div className="ruler" aria-hidden="true" />
 
       <section className="section">
         <div className="wrap">
           <h2>Where do you want to start?</h2>
           <ul className="paths">
-            <li>
+            <li className="path-with-photo">
+              <ShopPhoto slot="bench" />
               <Link href={`/events/${pilot.slug}`}>
                 <span className="meta">Saturday shop class</span>
                 <span className="path-title">{pilot.name}</span>
@@ -84,7 +91,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section band-dark">
         <div className="wrap">
           <h2>How a class runs</h2>
           <ol className="steps">
@@ -120,7 +127,9 @@ export default function HomePage() {
 
       <section className="section">
         <div className="wrap split">
-          <PhotoWell label={`${business.instructorName} at the bench with a kid, both in safety glasses.`} />
+          <PhotoWell
+            label={`${business.instructorName} at the bench with a kid, both in safety glasses.`}
+          />
           <div className="stack">
             <h2>Who teaches</h2>
             <p>
@@ -184,7 +193,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section" id="contact">
+      <section className="section band-yellow" id="contact">
         <div className="wrap measure stack">
           <h2>Contact</h2>
           <p>Call or email. We answer.</p>

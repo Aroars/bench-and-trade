@@ -1,7 +1,12 @@
 import { connection } from "next/server";
 import { business } from "@/config/business";
 import { startCheckout } from "@/lib/checkout";
-import { isDbConfigured, registerSignup, releaseRegistration } from "@/lib/db";
+import {
+  holdRegistrationForPayment,
+  isDbConfigured,
+  registerSignup,
+  releaseRegistration,
+} from "@/lib/db";
 import { requestOrigin } from "@/lib/origin";
 import { signupErrorMessage, signupSchema } from "@/lib/signup-schema";
 import { isStripeConfigured } from "@/lib/stripe";
@@ -62,6 +67,13 @@ export async function POST(request: Request) {
     });
   }
 
+  if (registration.status === "pending_payment") {
+    return Response.json({
+      status: "pending_payment",
+      registrationId: registration.id,
+    });
+  }
+
   if (registration.status !== "pending" && registration.status !== "processing") {
     return Response.json(
       { errors: ["This sign-up can no longer be paid. Send the form again."] },
@@ -70,15 +82,25 @@ export async function POST(request: Request) {
   }
 
   if (!isStripeConfigured()) {
-    await releaseRegistration(registration.id).catch(() => undefined);
-    return Response.json(
-      {
-        errors: [
-          "Card checkout is not configured. Set a Stripe test key, then try again. Nothing was charged.",
-        ],
-      },
-      { status: 503 },
-    );
+    if (registration.status !== "pending") {
+      return Response.json(
+        { errors: ["This sign-up can no longer be held. Send the form again."] },
+        { status: 409 },
+      );
+    }
+    const held = await holdRegistrationForPayment(registration.id);
+    if (!held.ok) {
+      return Response.json(
+        {
+          errors: ["We could not hold this spot. Send the form again. Nothing was charged."],
+        },
+        { status: 409 },
+      );
+    }
+    return Response.json({
+      status: "pending_payment",
+      registrationId: registration.id,
+    });
   }
 
   try {

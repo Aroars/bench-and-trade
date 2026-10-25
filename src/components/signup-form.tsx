@@ -21,7 +21,11 @@ function emptyKid(key: string): Kid {
   return { key, name: "", age: "", allergies: "", topping: "" };
 }
 
-export function SignupForm() {
+export function SignupForm({
+  paymentMode = "checkout",
+}: {
+  paymentMode?: "checkout" | "hold";
+}) {
   const search = useSearchParams();
   const router = useRouter();
   const canceled = search.get("canceled") === "1";
@@ -49,11 +53,19 @@ export function SignupForm() {
           return;
         }
         if (typeof body.remaining === "number") {
-          setSpotNote(
-            body.remaining === 1
-              ? "1 spot left. If the class fills before you pay, this form joins the waitlist instead."
-              : `${body.remaining} spots left. If the class fills before you pay, this form joins the waitlist instead.`,
-          );
+          if (paymentMode === "hold") {
+            setSpotNote(
+              body.remaining === 1
+                ? "1 spot left. Sending this form holds that spot. Bench & Trade will email a payment link before the class."
+                : `${body.remaining} spots left. Sending this form holds your spots. Bench & Trade will email a payment link before the class.`,
+            );
+          } else {
+            setSpotNote(
+              body.remaining === 1
+                ? "1 spot left. If the class fills before you pay, this form joins the waitlist instead."
+                : `${body.remaining} spots left. If the class fills before you pay, this form joins the waitlist instead.`,
+            );
+          }
         }
       })
       .catch(() => {
@@ -66,7 +78,7 @@ export function SignupForm() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [paymentMode]);
 
   function updateKid(key: string, patch: Partial<Kid>) {
     setKids((current) => current.map((kid) => (kid.key === key ? { ...kid, ...patch } : kid)));
@@ -168,6 +180,10 @@ export function SignupForm() {
       }
       if (body.status === "paid") {
         router.push("/thank-you?status=paid");
+        return;
+      }
+      if (body.status === "pending_payment") {
+        router.push("/thank-you?status=pending_payment");
         return;
       }
       if (body.checkoutUrl) {
@@ -383,7 +399,13 @@ export function SignupForm() {
 
       <div className="form-actions">
         <button className="button" type="submit" disabled={sending}>
-          {sending ? "Sending" : full ? "Join the waitlist" : "Continue to payment"}
+          {sending
+            ? "Sending"
+            : full
+              ? "Join the waitlist"
+              : paymentMode === "hold"
+                ? "Hold my spot"
+                : "Continue to payment"}
         </button>
       </div>
       <noscript>

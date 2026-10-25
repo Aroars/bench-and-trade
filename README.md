@@ -52,7 +52,7 @@ Public roles may insert a registration only while it is still `pending` and has 
 
 Seat rules live in `register_signup`:
 
-- `paid` and `processing` seats count.
+- `paid`, `processing`, and `pending_payment` seats count. `pending_payment` does not expire.
 - `pending` seats count for 30 minutes, the same window as `business.pilot.holdMinutes` and the Checkout session expiry.
 - If the whole family does not fit, the registration is `waitlist` and Checkout is not opened.
 - Sending the same idempotency key again returns the existing row.
@@ -79,6 +79,8 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
 
 Put the printed `whsec_` value in `STRIPE_WEBHOOK_SECRET`. Use card `4242 4242 4242 4242` in test mode.
+
+If `STRIPE_SECRET_KEY` is missing, sign-up does not open Checkout and does not expire the row. The registration becomes `pending_payment`, the seat stays counted, and the parent lands on a thank-you page that says the spot is held. Bench & Trade emails a payment link before the class. When a test key is set, new sign-ups go to Checkout again. A later paid webhook can mark a `pending_payment` row paid.
 
 ## Admin
 

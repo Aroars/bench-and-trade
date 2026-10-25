@@ -71,6 +71,13 @@ export const business = {
     "Full refund until 48 hours before the class. After that, the payment is credit toward the next class.",
   allergenNote:
     "The kitchen handles wheat, dairy, pine nuts, anchovies, and clams. Cross-contact is possible. This is not an allergy-safe meal.",
+  /**
+   * "stock" uses the Pexels files listed in src/config/photos.ts.
+   * Set this to "owned" when real class photos are ready, then fill ownedPhotos.
+   */
+  photos: {
+    mode: "stock" as "stock" | "owned",
+  },
 } as const;
 
 export type ToppingValue = (typeof business.toppings)[number]["value"];

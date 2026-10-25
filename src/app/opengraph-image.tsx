@@ -10,7 +10,7 @@ export const contentType = "image/png";
 export default async function OpenGraphImage() {
   const [heading, body] = await Promise.all([
     readFile(
-      join(process.cwd(), "node_modules/@fontsource/zilla-slab/files/zilla-slab-latin-700-normal.woff"),
+      join(process.cwd(), "node_modules/@fontsource/rowdies/files/rowdies-latin-700-normal.woff"),
     ),
     readFile(
       join(
@@ -29,12 +29,12 @@ export default async function OpenGraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          background: "#241c16",
-          color: "#f3eee6",
+          background: "#141210",
+          color: "#fffdf6",
           padding: "72px",
         }}
       >
-        <div style={{ fontSize: 28, letterSpacing: 2, color: "#c4a574", fontFamily: "Source Sans 3" }}>
+        <div style={{ fontSize: 28, letterSpacing: 2, color: "#ffd100", fontFamily: "Source Sans 3" }}>
           {business.name.toUpperCase()}
         </div>
         <div
@@ -42,7 +42,7 @@ export default async function OpenGraphImage() {
             fontSize: 92,
             lineHeight: 1.05,
             marginTop: 16,
-            fontFamily: "Zilla Slab",
+            fontFamily: "Rowdies",
           }}
         >
           {business.tagline}
@@ -55,7 +55,7 @@ export default async function OpenGraphImage() {
     {
       ...size,
       fonts: [
-        { name: "Zilla Slab", data: heading, weight: 700, style: "normal" },
+        { name: "Rowdies", data: heading, weight: 700, style: "normal" },
         { name: "Source Sans 3", data: body, weight: 400, style: "normal" },
       ],
     },

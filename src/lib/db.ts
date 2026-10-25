@@ -200,6 +200,18 @@ export async function attachCheckoutSession(
   return String(rows[0]?.result);
 }
 
+export async function holdRegistrationForPayment(registrationId: string): Promise<PaidResult> {
+  if (backend() === "supabase") {
+    return rpcFlag("hold_registration_for_payment", {
+      registration_id: registrationId,
+    });
+  }
+  const rows = await sql()`
+    select public.hold_registration_for_payment(${registrationId}::uuid) as result
+  `;
+  return mapFlag(rows[0]?.result);
+}
+
 export async function releaseRegistration(registrationId: string): Promise<void> {
   if (backend() === "supabase") {
     const { error } = await supabase().rpc("release_registration", {

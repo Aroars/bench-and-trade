@@ -71,6 +71,23 @@ export function ThankYouStatus({
     );
   }
 
+  if (status === "pending_payment") {
+    return (
+      <>
+        <h1>Your spot is held.</h1>
+        <p className="deck">
+          We saved your sign-up for {business.pilot.name} on {business.pilot.dateLabel}. Bench
+          &amp; Trade will email a payment link before the class. Nothing was charged today.
+        </p>
+        <p>
+          We will email what to wear with that link. Closed-toe shoes, hair tied back, clothes
+          that can get dusty. The class is on the fenced patio at {business.pilot.venueName},{" "}
+          {business.pilot.addressLine}.
+        </p>
+      </>
+    );
+  }
+
   if (status === "paid") {
     return (
       <>

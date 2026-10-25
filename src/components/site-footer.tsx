@@ -1,9 +1,16 @@
 import { business, formatDollars } from "@/config/business";
+import { stockPhotoList } from "@/config/photos";
 
 export function SiteFooter() {
   const { pilot, contact } = business;
+  const credits =
+    business.photos.mode === "stock"
+      ? stockPhotoList.map((photo) => `${photo.photographer} on ${photo.sourceName}`)
+      : [];
+
   return (
     <footer className="site-footer">
+      <div className="hazard" aria-hidden="true" />
       <div className="wrap footer-grid">
         <div>
           <h2>{business.name}</h2>
@@ -41,6 +48,13 @@ export function SiteFooter() {
           </p>
         </div>
       </div>
+      {credits.length ? (
+        <div className="wrap">
+          <p className="gap-top photo-caption">
+            Workshop photos are stock photos, not Bench &amp; Trade classes. {credits.join(". ")}.
+          </p>
+        </div>
+      ) : null}
     </footer>
   );
 }

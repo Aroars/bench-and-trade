@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { business, formatDollars } from "@/config/business";
-import { PhotoWell } from "@/components/photo-well";
+import { ShopPhoto } from "@/components/shop-photo";
 import { SpotsCount } from "@/components/spots-count";
 import { SponsorBlock } from "@/components/sponsor-block";
 
@@ -19,27 +19,30 @@ export const metadata: Metadata = {
 export default function EventPage() {
   return (
     <article>
-      <section className="section">
+      <section className="section band-dark">
         <div className="wrap split event-top">
-          <PhotoWell label="A finished mini pizza peel next to a personal pizza on the patio table." />
+          <ShopPhoto slot="woodshop" />
           <div className="stack">
             <p className="meta">A {business.name} shop class</p>
             <h1>{pilot.name}</h1>
             <p className="deck">{pilot.subtitle}</p>
-            <p className="price">{formatDollars(pilot.priceCents)} per kid</p>
-            <SpotsCount />
+            <div className="price-block">
+              <p className="price">{formatDollars(pilot.priceCents)} per kid</p>
+              <SpotsCount />
+              <p>
+                <Link className="button" href={`/events/${pilot.slug}/signup`}>
+                  Sign up
+                </Link>
+              </p>
+            </div>
             <p>
               Materials, safety glasses, and the pizza are included. Kids take the peel
               home.
             </p>
-            <p>
-              <Link className="button" href={`/events/${pilot.slug}/signup`}>
-                Sign up
-              </Link>
-            </p>
           </div>
         </div>
       </section>
+      <div className="hazard" aria-hidden="true" />
 
       <section className="section">
         <div className="wrap measure stack">

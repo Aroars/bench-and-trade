@@ -81,15 +81,20 @@ async function AdminGate({
     acc[row.status] = (acc[row.status] ?? 0) + row.students.length;
     return acc;
   }, {});
-  const held = (counts.paid ?? 0) + (counts.processing ?? 0) + (counts.pending ?? 0);
+  const held =
+    (counts.paid ?? 0) +
+    (counts.processing ?? 0) +
+    (counts.pending ?? 0) +
+    (counts.pending_payment ?? 0);
 
   return (
     <div className="gap-top">
       <p className="summary-line">
-        {counts.paid ?? 0} paid seats, {counts.pending ?? 0} unpaid seats still inside the
-        hold, {counts.waitlist ?? 0} on the waitlist. About {held} seats are spoken for
-        out of {business.pilot.capacity}. Pending seats drop off after{" "}
-        {business.pilot.holdMinutes} minutes if the card is not paid.
+        {counts.paid ?? 0} paid seats, {counts.pending ?? 0} unpaid card holds,{" "}
+        {counts.pending_payment ?? 0} spots held for a payment link, {counts.waitlist ?? 0} on
+        the waitlist. About {held} seats are spoken for out of {business.pilot.capacity}. A
+        card hold drops off after {business.pilot.holdMinutes} minutes if the card is not
+        paid. A spot held for a payment link stays on this list.
       </p>
       <p className="form-actions">
         <a className="button" href="/api/admin/export">
@@ -106,7 +111,7 @@ async function AdminGate({
         {rows.map((row) => (
           <article key={row.id}>
             <p className={`status-${row.status}`}>
-              <strong>{row.status}</strong>
+              <strong>{row.status === "pending_payment" ? "spot held" : row.status}</strong>
               {row.amountCents != null ? ` · ${formatDollars(row.amountCents)}` : ""}
               {row.paidAt ? ` · paid ${row.paidAt}` : ""}
             </p>

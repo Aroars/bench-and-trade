@@ -9,7 +9,7 @@ export const contentType = "image/png";
 
 export default async function EventOpenGraphImage() {
   const heading = await readFile(
-    join(process.cwd(), "node_modules/@fontsource/zilla-slab/files/zilla-slab-latin-700-normal.woff"),
+    join(process.cwd(), "node_modules/@fontsource/rowdies/files/rowdies-latin-700-normal.woff"),
   );
   const body = await readFile(
     join(
@@ -28,15 +28,16 @@ export default async function EventOpenGraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          background: "#f3eee6",
-          color: "#1c1914",
+          background: "#fffdf6",
+          color: "#141210",
           padding: "72px",
+          borderTop: "28px solid #ffd100",
         }}
       >
-        <div style={{ fontSize: 28, letterSpacing: 2, color: "#6e3428", fontFamily: "Source Sans 3" }}>
+        <div style={{ fontSize: 28, letterSpacing: 2, color: "#9e1c20", fontFamily: "Source Sans 3" }}>
           {business.name.toUpperCase()}
         </div>
-        <div style={{ fontSize: 84, lineHeight: 1.05, marginTop: 12, fontFamily: "Zilla Slab" }}>
+        <div style={{ fontSize: 84, lineHeight: 1.05, marginTop: 12, fontFamily: "Rowdies" }}>
           {pilot.name}
         </div>
         <div style={{ fontSize: 32, marginTop: 20, fontFamily: "Source Sans 3" }}>
@@ -50,7 +51,7 @@ export default async function EventOpenGraphImage() {
     {
       ...size,
       fonts: [
-        { name: "Zilla Slab", data: heading, weight: 700, style: "normal" },
+        { name: "Rowdies", data: heading, weight: 700, style: "normal" },
         { name: "Source Sans 3", data: body, weight: 400, style: "normal" },
       ],
     },
