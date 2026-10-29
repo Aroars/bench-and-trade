@@ -1,4 +1,4 @@
-import { connection } from "next/server";
+import { after, connection } from "next/server";
 import type Stripe from "stripe";
 import {
   markRegistrationExpired,
@@ -6,6 +6,7 @@ import {
   markRegistrationPaid,
   markRegistrationProcessing,
 } from "@/lib/db";
+import { sendRegistrationEmail } from "@/lib/email";
 import { getStripe } from "@/lib/stripe";
 
 export async function POST(request: Request) {
@@ -73,6 +74,9 @@ export async function POST(request: Request) {
         console.error("webhook_fulfill_failed", result.reason);
         return Response.json({ error: result.reason ?? "fulfill_failed" }, { status: 500 });
       }
+      // After the 200 goes back to Stripe. The email log keeps a retried
+      // webhook from sending twice, and a mail failure never fails the webhook.
+      after(() => sendRegistrationEmail("confirmation_paid", registrationId));
       return Response.json({ received: true, status: result.status });
     }
 

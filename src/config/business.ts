@@ -67,6 +67,21 @@ export const business = {
     "A flyer or library board",
     "Other",
   ] as const,
+  /**
+   * Read by the reminder emails. Leave a list empty to drop that block.
+   */
+  classNotes: {
+    whatToWear: [
+      "Closed-toe shoes. No sandals.",
+      "Clothes that can get dusty.",
+      "Hair tied back. No loose jewelry.",
+      "A jacket. It is a patio class and Boise mornings can be cold.",
+    ],
+    whatToBring: [
+      "Nothing. Tools, safety glasses, materials, and the pizza are included.",
+      "A water bottle if your kid likes to have one.",
+    ],
+  },
   refund:
     "Full refund until 48 hours before the class. After that, the payment is credit toward the next class.",
   allergenNote:
