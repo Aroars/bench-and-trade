@@ -14,9 +14,9 @@ npm run dev
 
 Open http://localhost:3000.
 
-`npm run test:db` applies the migration to an in-memory Postgres (PGlite) and checks seat holds, the waitlist, payment marking, and row-level security. It does not need Docker or a Supabase project.
+`npm run test:db` applies the migrations to an in-memory Postgres (PGlite) and checks seat holds, the waitlist, payment marking, the email log, and row-level security. It does not need Docker or a Supabase project.
 
-`npm run lint` and `npm run build` are the other checks.
+`npm test` runs the Vitest suite: reminder day math in Boise time, recipient selection, idempotency, and a render of every email template. `npm run lint`, `npm run typecheck`, and `npm run build` are the other checks.
 
 ## Environment variables
 
@@ -33,17 +33,22 @@ See `.env.example`.
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `/api/webhooks/stripe`. |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Optional. The page does not load Stripe.js. |
 | `ADMIN_PASSWORD` | Password for `/admin`. |
-| `ADMIN_SESSION_SECRET` | Signs the admin cookie. Use a long random string. |
+| `ADMIN_SESSION_SECRET` | Signs the admin cookie. Use a long random string. Also signs waitlist unsubscribe links unless `EMAIL_UNSUBSCRIBE_SECRET` is set. |
+| `RESEND_API_KEY` | Resend key for transactional email. Unset means sends are logged as skipped. See `docs/email.md`. |
+| `EMAIL_FROM` | Optional From header. Defaults to `Bench & Trade <classes@send.benchandtrade.com>`. |
+| `EMAIL_REPLY_TO` | Optional Reply-To header. Omitted when empty. |
+| `EMAIL_UNSUBSCRIBE_SECRET` | Optional. Signs waitlist opt-out links. |
+| `CRON_SECRET` | Vercel sends it to `/api/cron/reminders`. Vercel sets it when the cron deploys. |
 
-On Vercel, mark the service role, Stripe secret, webhook secret, admin password, and session secret as sensitive.
+On Vercel, mark the service role, Stripe secret, webhook secret, admin password, session secret, Resend key, and cron secret as sensitive.
 
 A restricted Stripe key needs Checkout Sessions write and read. Webhook signature checks use `STRIPE_WEBHOOK_SECRET`, not the restricted key.
 
 ## Database
 
-The migration is `supabase/migrations/20261025173814_init_signups.sql`. It creates `events`, `registrations`, and `students`, turns on row-level security, and seeds the pilot.
+The migrations are in `supabase/migrations`. The first creates `events`, `registrations`, and `students`, turns on row-level security, and seeds the pilot. The second adds `pending_payment`. The third adds `email_log` and `waitlist_opt_outs` for transactional email.
 
-Apply it in either place:
+Apply them in order, in either place:
 
 1. Supabase SQL editor: paste the file and run it. The `anon`, `authenticated`, and `service_role` roles already exist there, so the role block does nothing.
 2. Supabase CLI: `supabase db push` against the linked project.
@@ -57,7 +62,9 @@ Seat rules live in `register_signup`:
 - If the whole family does not fit, the registration is `waitlist` and Checkout is not opened.
 - Sending the same idempotency key again returns the existing row.
 
-There is no email sender. Someone has to contact the waitlist by hand.
+## Email
+
+Resend sends a confirmation when a sign-up is saved (one version for paid, one for a held spot), a waitlist note when the class is full, reminders 5 days and 1 day before class from a daily Vercel Cron, and a "new class opened" email to the waitlist from a button on `/admin`. Every send is logged in `email_log` so nothing goes twice. Copy lives in `src/config/email-copy.ts`. Setup, DNS records for `send.benchandtrade.com`, and how to test are in `docs/email.md`.
 
 ## Stripe
 
@@ -84,7 +91,7 @@ If `STRIPE_SECRET_KEY` is missing, sign-up does not open Checkout and does not e
 
 ## Admin
 
-`/admin` asks for `ADMIN_PASSWORD`. The cookie is httpOnly, same-site lax, and secure in production. The CSV download is `GET /api/admin/export`, one row per student.
+`/admin` asks for `ADMIN_PASSWORD`. The cookie is httpOnly, same-site lax, and secure in production. The CSV download is `GET /api/admin/export`, one row per student. The page also has the "tell the waitlist about a new class" button: pick the class, preview the recipient count, confirm, send.
 
 ## Deploy
 

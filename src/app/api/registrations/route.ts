@@ -1,4 +1,4 @@
-import { connection } from "next/server";
+import { after, connection } from "next/server";
 import { business } from "@/config/business";
 import { startCheckout } from "@/lib/checkout";
 import {
@@ -7,7 +7,16 @@ import {
   registerSignup,
   releaseRegistration,
 } from "@/lib/db";
+import { sendRegistrationEmail, type RegistrationEmailKind } from "@/lib/email";
 import { requestOrigin } from "@/lib/origin";
+
+/**
+ * Email goes out after the response is sent. sendRegistrationEmail never
+ * throws, so a mail problem cannot turn into a sign-up error.
+ */
+function emailLater(kind: RegistrationEmailKind, registrationId: string) {
+  after(() => sendRegistrationEmail(kind, registrationId));
+}
 import { signupErrorMessage, signupSchema } from "@/lib/signup-schema";
 import { isStripeConfigured } from "@/lib/stripe";
 
@@ -54,6 +63,7 @@ export async function POST(request: Request) {
   }
 
   if (registration.status === "waitlist") {
+    emailLater("waitlist", registration.id);
     return Response.json({
       status: "waitlist",
       registrationId: registration.id,
@@ -68,6 +78,7 @@ export async function POST(request: Request) {
   }
 
   if (registration.status === "pending_payment") {
+    emailLater("confirmation_pending", registration.id);
     return Response.json({
       status: "pending_payment",
       registrationId: registration.id,
@@ -97,6 +108,7 @@ export async function POST(request: Request) {
         { status: 409 },
       );
     }
+    emailLater("confirmation_pending", registration.id);
     return Response.json({
       status: "pending_payment",
       registrationId: registration.id,

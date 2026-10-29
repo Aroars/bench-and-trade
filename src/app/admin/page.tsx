@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { business, formatDollars } from "@/config/business";
+import { isEmailConfigured } from "@/config/email";
+import type { EmailEvent } from "@/emails/types";
 import { adminPasswordConfigured, isAdmin } from "@/lib/admin-auth";
-import { isDbConfigured, listRegistrations, type RegistrationRecord } from "@/lib/db";
+import { formatBoiseDate, formatBoiseTimeRange } from "@/lib/boise-time";
+import { isDbConfigured, listEvents, listRegistrations, type RegistrationRecord } from "@/lib/db";
+import { previewWaitlistEmail } from "@/lib/email";
+import type { WaitlistPreview } from "@/lib/email/waitlist-notify";
 
 export const metadata: Metadata = {
   title: "Registration list",
@@ -11,11 +16,18 @@ export const metadata: Metadata = {
 
 const toppingLabel = new Map(business.toppings.map((topping) => [topping.value, topping.label]));
 
-export default function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+type AdminParams = {
+  error?: string;
+  notify?: string;
+  notified?: string;
+  notify_error?: string;
+  sent?: string;
+  skipped?: string;
+  failed?: string;
+  already?: string;
+};
+
+export default function AdminPage({ searchParams }: { searchParams: Promise<AdminParams> }) {
   return (
     <section className="section">
       <div className="wrap">
@@ -29,11 +41,7 @@ export default function AdminPage({
   );
 }
 
-async function AdminGate({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
+async function AdminGate({ searchParams }: { searchParams: Promise<AdminParams> }) {
   const params = await searchParams;
   const signedIn = await isAdmin();
   if (!signedIn) {
@@ -71,8 +79,9 @@ async function AdminGate({
   }
 
   let rows: RegistrationRecord[] = [];
+  let events: EmailEvent[] = [];
   try {
-    rows = await listRegistrations(business.pilot.slug);
+    [rows, events] = await Promise.all([listRegistrations(business.pilot.slug), listEvents()]);
   } catch {
     return <p className="gap-top">The list could not be loaded. Check the database connection.</p>;
   }
@@ -106,6 +115,7 @@ async function AdminGate({
           </button>
         </form>
       </p>
+      <WaitlistNotify events={events} params={params} />
       <div className="roster">
         {rows.length === 0 ? <p>No sign-ups yet.</p> : null}
         {rows.map((row) => (
@@ -140,5 +150,124 @@ async function AdminGate({
         ))}
       </div>
     </div>
+  );
+}
+
+function eventLabel(event: EmailEvent): string {
+  const start = new Date(event.startsAt);
+  const end = new Date(event.endsAt);
+  return `${event.title} · ${formatBoiseDate(start)}, ${formatBoiseTimeRange(start, end)}`;
+}
+
+/**
+ * "A new class opened" for the waitlist. Pick the class, see who would get
+ * it, then send. Nothing is sent until the second button.
+ */
+async function WaitlistNotify({ events, params }: { events: EmailEvent[]; params: AdminParams }) {
+  const emailOn = isEmailConfigured();
+  const selected = params.notify && events.some((event) => event.id === params.notify)
+    ? params.notify
+    : "";
+
+  let preview: WaitlistPreview | null = null;
+  let previewError = false;
+  if (selected) {
+    try {
+      preview = await previewWaitlistEmail(selected);
+    } catch {
+      previewError = true;
+    }
+  }
+
+  const notifiedEvent = params.notified
+    ? events.find((event) => event.id === params.notified)
+    : undefined;
+
+  return (
+    <section className="gap-top" aria-labelledby="waitlist-notify">
+      <h2 id="waitlist-notify">Tell the waitlist about a new class</h2>
+      <p>
+        Everyone on the waitlist for any class gets one email about the class you pick, unless
+        they opted out. Pick the class, check the count, then send. Each family is emailed once
+        per new class, so pressing send twice does not send twice.
+      </p>
+      {!emailOn ? (
+        <p className="note">
+          RESEND_API_KEY is not set, so nothing goes out. Sends are recorded as skipped. See
+          docs/email.md.
+        </p>
+      ) : null}
+      {params.notify_error === "event" ? (
+        <p className="errors" role="alert">
+          That class was not found. Pick it again.
+        </p>
+      ) : null}
+      {params.notify_error === "send" ? (
+        <p className="errors" role="alert">
+          The send did not finish. Check the server log, then try again. Families already
+          emailed will not get a second copy.
+        </p>
+      ) : null}
+      {notifiedEvent ? (
+        <p className="note" role="status">
+          Done for {notifiedEvent.title}: {params.sent ?? "0"} sent, {params.already ?? "0"}{" "}
+          already had it, {params.skipped ?? "0"} skipped, {params.failed ?? "0"} failed.
+        </p>
+      ) : null}
+      <form className="form" method="get" action="/admin">
+        <div className="field">
+          <label htmlFor="notify">New class</label>
+          <select id="notify" name="notify" defaultValue={selected} required>
+            <option value="" disabled>
+              Pick a class
+            </option>
+            {events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {eventLabel(event)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="form-actions">
+          <button className="button-secondary" type="submit">
+            Preview recipients
+          </button>
+        </p>
+      </form>
+      {previewError ? (
+        <p className="errors" role="alert">
+          The recipient list could not be loaded. Check the database connection.
+        </p>
+      ) : null}
+      {preview ? (
+        <div className="gap-top">
+          <p className="summary-line">
+            {preview.count} {preview.count === 1 ? "family" : "families"} will get the new-class
+            email for {preview.event.title}.
+            {preview.alreadyNotified ? ` ${preview.alreadyNotified} already had it.` : ""}
+            {preview.optedOut ? ` ${preview.optedOut} opted out.` : ""}
+            {preview.duplicates
+              ? ` ${preview.duplicates} repeat ${preview.duplicates === 1 ? "address was" : "addresses were"} folded in.`
+              : ""}
+          </p>
+          {preview.emails.length ? (
+            <p style={{ wordBreak: "break-word" }}>{preview.emails.join(", ")}</p>
+          ) : (
+            <p>Nothing to send.</p>
+          )}
+          {preview.count > 0 ? (
+            <form method="post" action="/api/admin/waitlist-notify">
+              <input type="hidden" name="event_id" value={preview.event.id} />
+              <input type="hidden" name="confirm" value="1" />
+              <p className="form-actions">
+                <button className="button" type="submit">
+                  Send to {preview.count} {preview.count === 1 ? "family" : "families"}
+                </button>
+              </p>
+            </form>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }

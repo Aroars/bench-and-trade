@@ -259,5 +259,90 @@ const badHold = await call(
 );
 assert(badHold.ok === false && badHold.reason === "bad_status", "waitlist cannot be held");
 
-console.log("verify-db: seat holds, payments, and RLS checks passed");
+// Email log: one row per (registration, kind), and per new class for the
+// waitlist "new class" email. Opt-outs are keyed by address.
+await db.query(
+  "insert into public.email_log (registration_id, event_id, kind, status, resend_id) values ($1, $2, 'confirmation_paid', 'sent', 're_1')",
+  [first.id, eventId],
+);
+await expectError(
+  () =>
+    db.query(
+      "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'confirmation_paid', 'sent')",
+      [first.id, eventId],
+    ),
+  "duplicate key",
+);
+await db.query(
+  "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'reminder_5d', 'skipped')",
+  [first.id, eventId],
+);
+await expectError(
+  () =>
+    db.query(
+      "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'reminder_5d', 'sent')",
+      [first.id, eventId],
+    ),
+  "duplicate key",
+);
+await expectError(
+  () =>
+    db.query(
+      "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'postcard', 'sent')",
+      [first.id, eventId],
+    ),
+  "check constraint",
+);
+await expectError(
+  () =>
+    db.query(
+      "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'reminder_1d', 'queued')",
+      [first.id, eventId],
+    ),
+  "check constraint",
+);
+
+const secondEvent = await db.query(
+  `insert into public.events (slug, title, starts_at, ends_at, price_cents, capacity, min_age, max_age, location_name, location_address)
+   values ('second-class', 'Second Class', '2027-03-15 10:00:00-06', '2027-03-15 12:00:00-06', 4000, 12, 7, 12, 'Casanova Pizzeria', '2431 W Fairview Ave, Boise, ID 83702')
+   returning id`,
+);
+const secondEventId = secondEvent.rows[0].id;
+await db.query(
+  "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'waitlist_new_class', 'sent')",
+  [waiting.id, secondEventId],
+);
+await expectError(
+  () =>
+    db.query(
+      "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'waitlist_new_class', 'sent')",
+      [waiting.id, secondEventId],
+    ),
+  "duplicate key",
+);
+await db.query(
+  "insert into public.email_log (registration_id, event_id, kind, status) values ($1, $2, 'waitlist_new_class', 'sent')",
+  [waiting.id, eventId],
+);
+const newClassRows = await db.query(
+  "select count(*)::int as count from public.email_log where registration_id = $1 and kind = 'waitlist_new_class'",
+  [waiting.id],
+);
+assert(newClassRows.rows[0].count === 2, "one new-class email per class is allowed");
+
+await db.query("insert into public.waitlist_opt_outs (email) values ('ada@example.com')");
+await db.query("insert into public.waitlist_opt_outs (email) values ('ada@example.com') on conflict (email) do nothing");
+const optOuts = await db.query("select count(*)::int as count from public.waitlist_opt_outs");
+assert(optOuts.rows[0].count === 1, "opt-out is keyed by address");
+
+await db.exec("set role anon");
+await expectError(() => db.query("select count(*) from public.email_log"), "permission denied");
+await expectError(() => db.query("select count(*) from public.waitlist_opt_outs"), "permission denied");
+await expectError(
+  () => db.query("insert into public.waitlist_opt_outs (email) values ('x@example.com')"),
+  "permission denied",
+);
+await db.exec("reset role");
+
+console.log("verify-db: seat holds, payments, email log, and RLS checks passed");
 await db.close();
